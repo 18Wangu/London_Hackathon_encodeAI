@@ -626,7 +626,7 @@ export const useExpenseStore = create<ExpenseStore>(
   }
     }),
     {
-      docId: "test-theo",
+      docId: "demofinal2",
       initTimeout: 30000,
       onInitError: (error) =>
         console.error("Expense sync initialization error:", error),

@@ -142,7 +142,7 @@ export const useWheelStore = create<WheelStore>(
       }
     }),
     {
-      docId: "test-theo",
+      docId: "demofinal2",
       initTimeout: 30000,
       onInitError: (error) =>
         console.error("Wheel sync initialization error:", error),

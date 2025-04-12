@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useEventStore, Event } from "../stores/eventStore";
+import "../styles/animations.css";
 
 interface EventListProps {
   currentUserId: string;
@@ -8,6 +9,8 @@ interface EventListProps {
 const EventList: React.FC<EventListProps> = ({ currentUserId }) => {
   const { events, users, respondToEvent } = useEventStore();
   const [selectedUserId, setSelectedUserId] = useState<string>(currentUserId);
+  const [eventImages, setEventImages] = useState<Record<string, string>>({});
+  const [loadingImages, setLoadingImages] = useState<Record<string, boolean>>({});
 
   // This useEffect should only run on initial mount and when users change
   // It should not reset selectedUserId when the user manually changes it
@@ -22,6 +25,51 @@ const EventList: React.FC<EventListProps> = ({ currentUserId }) => {
       setSelectedUserId(currentUserId);
     }
   }, [currentUserId, users]);
+  
+  // Generate images for events that don't have one yet
+  useEffect(() => {
+    const generateMissingImages = async () => {
+      for (const event of Object.values(events)) {
+        if (!eventImages[event.id] && !loadingImages[event.id]) {
+          await generateEventImage(event);
+        }
+      }
+    };
+    
+    generateMissingImages();
+  }, [events]);
+  
+  const generateEventImage = async (event: Event) => {
+    try {
+      // Mark this event as loading
+      setLoadingImages(prev => ({ ...prev, [event.id]: true }));
+      
+      const response = await fetch('http://localhost:6082/api/generate-event-image', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: event.title,
+          description: event.description,
+          items: event.items
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (data.imageUrl) {
+        setEventImages(prev => ({
+          ...prev,
+          [event.id]: data.imageUrl
+        }));
+      }
+    } catch (error) {
+      console.error('Error generating image for event:', error);
+    } finally {
+      setLoadingImages(prev => ({ ...prev, [event.id]: false }));
+    }
+  };
 
   const handleResponse = (eventId: string, response: "going" | "not going") => {
     if (selectedUserId) {
@@ -93,12 +141,47 @@ const EventList: React.FC<EventListProps> = ({ currentUserId }) => {
                 <div className="flex-1 bg-red-600"></div>
               </div>
               
+              {/* Event image */}
+              {eventImages[event.id] && (
+                <div className="mb-4 rounded-lg overflow-hidden">
+                  <img 
+                    src={eventImages[event.id]} 
+                    alt={event.title}
+                    className="w-full h-48 object-cover rounded-lg animate-fadeIn" 
+                  />
+                </div>
+              )}
+              
+              {loadingImages[event.id] && (
+                <div className="mb-4 rounded-lg overflow-hidden bg-gray-100 w-full h-48 flex items-center justify-center">
+                  <div className="animate-pulse flex flex-col items-center">
+                    <svg className="animate-spin h-8 w-8 text-blue-500 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span className="text-sm text-gray-500">Generating event image...</span>
+                  </div>
+                </div>
+              )}
+              
               <div className="ml-3">
                 <div className="mb-4">
                   <h3 className="text-xl font-semibold text-gray-800">{event.title}</h3>
                   
                   {event.description && (
                     <p className="mt-2 text-gray-600">{event.description}</p>
+                  )}
+                  
+                  {!eventImages[event.id] && !loadingImages[event.id] && (
+                    <button
+                      onClick={() => generateEventImage(event)}
+                      className="mt-2 px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 inline-flex items-center"
+                    >
+                      <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      Generate Event Image
+                    </button>
                   )}
                   
                   <div className="mt-3 flex flex-wrap gap-2">

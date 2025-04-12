@@ -3,23 +3,23 @@ import cors from "cors";
 import { OpenAI } from "openai";
 import dotenv from "dotenv";
 
-// Charger les variables d'environnement
+// Load environment variables
 dotenv.config();
 
 const app = express();
-const PORT = 6082; // Changed to avoid port conflict
+const PORT = process.env.PORT || 6082; // Use environment variable with fallback
 
 // Middleware
 app.use(express.json());
 app.use(cors());
 
-// OpenAI configuration via variable d'environnement
+// OpenAI configuration via environment variable
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
 if (!process.env.OPENAI_API_KEY) {
-  console.error("❌ OPENAI_API_KEY n'est pas défini dans le fichier .env !");
+  console.error("❌ OPENAI_API_KEY is not defined in the .env file!");
   process.exit(1);
 }
 
@@ -40,11 +40,11 @@ app.get("/api/generate-description", async (req, res) => {
       messages: [
         {
           role: "system",
-          content: "🎉 Salut ! Tu es un assistant qui génère des descriptions courtes, aléatoires et fun pour des **users** sur notre appli de planification sociale. Reste bref (max 30 mots) et créatif !"
+          content: "🎉 Hi there! You're an assistant that generates short, random, and fun descriptions for **users** on our social planning app. Keep it brief (max 30 words) and creative! At the end of each description, include a short joke and finish with ellipsis (...). ALWAYS respond in English only."
         },
         {
           role: "user",
-          content: "Génère une description aléatoire et fun pour un profil d'utilisateur 😊"
+          content: "Generate a random and fun description for a user profile. End with a short joke and finish with ellipsis (...). Your response must be in English only. 😊"
         }
       ],
       max_tokens: 50,
@@ -71,20 +71,20 @@ app.post("/api/generate-group-description", async (req, res) => {
     
     let eventDetails = Object.values(events).map((event: any) => {
       const creator = users[event.createdBy]?.name || "Someone";
-      return `"${event.title}" organisé par ${creator}`;
+      return `"${event.title}" organized by ${creator}`;
     }).join(", ");
 
-    const prompt = `Génère une description fun et personnalisée (max 50 mots) pour un groupe d'amis qui organisent des événements ensemble en France 🇫🇷. 
-Les **users** sont: ${userNames}. 
-Leurs événements récents sont: ${eventDetails || "aucun événement pour l'instant"}. 
-Ajoute des emojis (ex. 😊, 🎉) et mentionne quelques noms pour rendre le tout vivant !`;
+    const prompt = `Generate a fun and personalized description (max 50 words) for a group of friends who organize events together in France 🇫🇷. 
+The **users** are: ${userNames}. 
+Their recent events are: ${eventDetails || "no events yet"}. 
+Add emojis (e.g. 😊, 🎉) and mention some names to make it lively! End with a short joke and finish with ellipsis (...).`;
 
     const completion = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: [
         {
           role: "system",
-          content: "🎊 Salut ! Tu es un assistant qui crée des descriptions personnalisées pour des groupes d'amis. Sois bref, créatif et ajoute quelques emojis 😊🎉."
+          content: "🎊 Hello! You're an assistant that creates personalized descriptions for groups of friends. Be brief, creative, and add some emojis 😊🎉. At the end of each description, include a short joke and finish with ellipsis (...). ALWAYS respond in English only."
         },
         {
           role: "user",
@@ -101,6 +101,44 @@ Ajoute des emojis (ex. 😊, 🎉) et mentionne quelques noms pour rendre le tou
   } catch (error) {
     console.error("Error generating group description:", error);
     res.status(500).json({ error: "Failed to generate group description" });
+  }
+});
+
+// Route to generate event images based on title and description
+app.post("/api/generate-event-image", async (req, res) => {
+  try {
+    const { title, description, items } = req.body;
+    
+    if (!title) {
+      return res.status(400).json({ error: "Event title is required" });
+    }
+
+    // Create a prompt that combines the event details
+    let itemsText = "";
+    if (items && items.length > 0) {
+      itemsText = `Items for the event: ${items.map((item: any) => item.name).join(", ")}.`;
+    }
+
+    const prompt = `Create a vibrant, colorful image for a social event in France called "${title}". ${description ? `The event description is: ${description}.` : ""} ${itemsText} Style: Modern, friendly, social gathering with a French theme.`;
+
+    // Generate the image using DALL-E
+    const response = await openai.images.generate({
+      model: "dall-e-3",
+      prompt: prompt,
+      n: 1,
+      size: "1024x1024",
+    });
+
+    const imageUrl = response.data[0]?.url;
+    
+    if (!imageUrl) {
+      throw new Error("Failed to generate image");
+    }
+
+    res.json({ imageUrl });
+  } catch (error) {
+    console.error("Error generating event image:", error);
+    res.status(500).json({ error: "Failed to generate event image" });
   }
 });
 

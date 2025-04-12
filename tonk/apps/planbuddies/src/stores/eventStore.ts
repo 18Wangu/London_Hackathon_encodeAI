@@ -157,7 +157,7 @@ export const useEventStore = create<EventState>(
       },
     }),
     {
-      docId: "test-theo",
+      docId: "demofinal2",
       initTimeout: 30000,
       onInitError: (error) =>
         console.error("Event sync initialization error:", error),
