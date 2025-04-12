@@ -7,7 +7,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const app = express();
-const PORT = 6080;
+const PORT = 6082; // Changed to avoid port conflict
 
 // Middleware
 app.use(express.json());

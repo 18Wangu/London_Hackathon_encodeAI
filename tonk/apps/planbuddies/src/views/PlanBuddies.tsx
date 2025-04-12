@@ -20,7 +20,7 @@ const PlanBuddies: React.FC = () => {
     try {
       setIsGeneratingDescription(true);
       
-      const response = await fetch('http://localhost:6080/api/generate-group-description', {
+      const response = await fetch('http://localhost:6082/api/generate-group-description', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
