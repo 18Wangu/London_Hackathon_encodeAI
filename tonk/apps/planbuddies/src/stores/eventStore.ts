@@ -45,6 +45,7 @@ export interface EventState {
   createEvent: (title: string, description: string, location: string, date: string, items: string[], createdBy: string) => void;
   respondToEvent: (eventId: string, userId: string, response: "going" | "not going") => void;
   removeEvent: (id: string) => void;
+  updateUserAvatar: (userId: string, avatarUrl: string) => void;
 }
 
 // Generate a random ID
@@ -153,6 +154,22 @@ export const useEventStore = create<EventState>(
           const newEvents = { ...state.events };
           delete newEvents[id];
           return { events: newEvents };
+        });
+      },
+
+      updateUserAvatar: (userId, avatarUrl) => {
+        set((state) => {
+          if (!state.users[userId]) return state;
+          
+          return {
+            users: {
+              ...state.users,
+              [userId]: {
+                ...state.users[userId],
+                avatar: avatarUrl,
+              },
+            },
+          };
         });
       },
     }),

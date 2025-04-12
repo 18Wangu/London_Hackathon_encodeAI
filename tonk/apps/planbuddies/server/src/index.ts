@@ -10,7 +10,8 @@ const app = express();
 const PORT = process.env.PORT || 6082; // Use environment variable with fallback
 
 // Middleware
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cors());
 
 // OpenAI configuration via environment variable
@@ -139,6 +140,47 @@ app.post("/api/generate-event-image", async (req, res) => {
   } catch (error) {
     console.error("Error generating event image:", error);
     res.status(500).json({ error: "Failed to generate event image" });
+  }
+});
+
+// Route to generate AI-styled avatar from user photo
+app.post("/api/generate-avatar", async (req, res) => {
+  try {
+    const { photoData } = req.body;
+    
+    if (!photoData) {
+      return res.status(400).json({ error: "Photo data is required" });
+    }
+
+    // Generate the avatar using DALL-E
+    const response = await openai.images.generate({
+      model: "dall-e-3",
+      prompt: "Create a stylized, artistic avatar portrait based on this photo. Use a modern, vibrant art style with bold colors. Make it look professional and friendly.",
+      n: 1,
+      size: "512x512", // Smaller size to reduce API usage
+    });
+
+    const avatarUrl = response.data[0]?.url;
+    
+    if (!avatarUrl) {
+      throw new Error("Failed to generate image");
+    }
+
+    res.json({ avatarUrl });
+  } catch (error: any) {
+    console.error("Error generating avatar:", error);
+    // Send more detailed error information
+    if (error.code === 'rate_limit_exceeded') {
+      res.status(429).json({ 
+        error: "API rate limit exceeded. Please try again later.",
+        details: error.message || "Rate limit exceeded"
+      });
+    } else {
+      res.status(500).json({ 
+        error: "Failed to generate avatar", 
+        details: error.message || "Unknown error" 
+      });
+    }
   }
 });
 
