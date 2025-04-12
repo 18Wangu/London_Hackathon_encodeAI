@@ -521,6 +521,23 @@ export const useExpenseStore = create<ExpenseStore>(
         (balances[settlement.to].isOwed[settlement.from] || 0) - settlement.amount;
     });
 
+    // Clean up zero or negative balances (remove them completely)
+    Object.values(balances).forEach(balance => {
+      // Remove zero or negative values from owes
+      Object.keys(balance.owes).forEach(creditorId => {
+        if (balance.owes[creditorId] <= 0) {
+          delete balance.owes[creditorId];
+        }
+      });
+      
+      // Remove zero or negative values from isOwed
+      Object.keys(balance.isOwed).forEach(debtorId => {
+        if (balance.isOwed[debtorId] <= 0) {
+          delete balance.isOwed[debtorId];
+        }
+      });
+    });
+
     set({ balances });
     
     // Check for overdue debts after calculating balances
@@ -568,6 +585,23 @@ export const useExpenseStore = create<ExpenseStore>(
         balances[settlement.to].isOwed[settlement.from] = 
           (balances[settlement.to].isOwed[settlement.from] || 0) - settlement.amount;
       });
+
+    // Clean up zero or negative balances (remove them completely)
+    Object.values(balances).forEach(balance => {
+      // Remove zero or negative values from owes
+      Object.keys(balance.owes).forEach(creditorId => {
+        if (balance.owes[creditorId] <= 0) {
+          delete balance.owes[creditorId];
+        }
+      });
+      
+      // Remove zero or negative values from isOwed
+      Object.keys(balance.isOwed).forEach(debtorId => {
+        if (balance.isOwed[debtorId] <= 0) {
+          delete balance.isOwed[debtorId];
+        }
+      });
+    });
 
     return balances;
   },

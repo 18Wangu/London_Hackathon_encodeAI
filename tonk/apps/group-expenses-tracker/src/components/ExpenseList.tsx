@@ -10,9 +10,130 @@ const ExpenseList: React.FC = () => {
     return users[userId]?.name || 'Unknown';
   };
 
-  const getRandomEmoji = () => {
-    const emojis = ['🍕', '🍔', '🚕', '🏠', '🎬', '🎮', '🛒', '⚡️', '📱', '🎸'];
-    return emojis[Math.floor(Math.random() * emojis.length)];
+  const getCategoryEmoji = (description: string) => {
+    // Map of expense categories to emojis
+    const categoryMap: Record<string, string> = {
+      // Food & Drinks
+      'coffee': '☕️',
+      'lunch': '🍽️',
+      'dinner': '🍴',
+      'breakfast': '🥞',
+      'restaurant': '🍽️',
+      'pizza': '🍕',
+      'burger': '🍔',
+      'sushi': '🍣',
+      'beer': '🍺',
+      'drinks': '🍹',
+      'bar': '🥂',
+      'cafe': '☕️',
+      'groceries': '🛒',
+      'snacks': '🍿',
+      'bakery': '🥐',
+      
+      // Transportation
+      'gas': '⛽',
+      'uber': '🚗',
+      'taxi': '🚕',
+      'lyft': '🚙',
+      'train': '🚆',
+      'subway': '🚇',
+      'bus': '🚌',
+      'flight': '✈️',
+      'parking': '🅿️',
+      'car': '🚘',
+      'rental': '🚙',
+      
+      // Entertainment
+      'movie': '🎬',
+      'cinema': '🎥',
+      'theater': '🎭',
+      'concert': '🎵',
+      'show': '🎪',
+      'game': '🎮',
+      'ticket': '🎟️',
+      'museum': '🏛️',
+      'music': '🎧',
+      'netflix': '📺',
+      'spotify': '🎵',
+      'subscription': '📱',
+      
+      // Home & Utilities
+      'rent': '🏠',
+      'mortgage': '🏡',
+      'electricity': '💡',
+      'water': '💧',
+      'internet': '🌐',
+      'wifi': '📶',
+      'phone': '📱',
+      'furniture': '🛋️',
+      'repair': '🔧',
+      'cleaning': '🧹',
+      
+      // Shopping
+      'clothes': '👕',
+      'shoes': '👟',
+      'shopping': '🛍️',
+      'amazon': '📦',
+      'gift': '🎁',
+      'electronics': '💻',
+      'book': '📚',
+      'makeup': '💄',
+      
+      // Health & Wellness
+      'gym': '💪',
+      'doctor': '👨‍⚕️',
+      'dentist': '🦷',
+      'medicine': '💊',
+      'pharmacy': '💉',
+      'therapy': '🧠',
+      'haircut': '💇',
+      'spa': '💆',
+      
+      // Travel
+      'hotel': '🏨',
+      'airbnb': '🏡',
+      'vacation': '🏝️',
+      'travel': '🧳',
+      'tour': '🗺️',
+      'beach': '🏖️',
+      
+      // Education
+      'tuition': '🎓',
+      'course': '📝',
+      'book': '📚',
+      'school': '🏫',
+      'university': '🎓',
+      'class': '📚',
+      
+      // Other
+      'tax': '📋',
+      'insurance': '🔒',
+      'loan': '💰',
+      'charity': '❤️',
+      'donation': '🙏',
+      'fee': '💸',
+      'bill': '📄',
+      'debt': '💳',
+      'investment': '📈',
+      'salary': '💵',
+      'cash': '💵',
+      'transfer': '🔄',
+      'deposit': '🏦',
+      'withdrawal': '💸'
+    };
+    
+    // Convert description to lowercase for case-insensitive matching
+    const lowerDesc = description.toLowerCase();
+    
+    // Find matching category
+    for (const [category, emoji] of Object.entries(categoryMap)) {
+      if (lowerDesc.includes(category)) {
+        return emoji;
+      }
+    }
+    
+    // Default emoji if no category matches
+    return '💰';
   };
 
   const getTotalOwed = () => {
@@ -65,7 +186,7 @@ const ExpenseList: React.FC = () => {
 
         <div className="grid gap-4">
           {expenses.map((expense) => {
-            const emoji = getRandomEmoji();
+            const emoji = getCategoryEmoji(expense.description);
             return (
               <div key={expense.id} className="card hover:scale-[1.02] cursor-pointer">
                 <div className="flex items-start gap-4">

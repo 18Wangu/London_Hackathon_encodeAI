@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useExpenseStore } from '../stores/expenseStore';
 import { motion, AnimatePresence } from 'framer-motion';
-import Confetti from 'react-confetti';
+import FrenchConfetti from './FrenchConfetti';
 
 interface DebtGameProps {
   fromId: string;
   toId: string;
   amount: number;
+  inPopup?: boolean;
 }
 
 const choices = {
@@ -154,6 +155,9 @@ interface DuelSideProps {
   isLeft: boolean;
 }
 
+// Choice variants for animation
+// Note: This is currently unused but kept for future enhancements
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const choiceVariants: Record<string, any> = {
   initial: ({ isLeft }: DuelSideProps) => ({
     x: isLeft ? -200 : 200,
@@ -191,31 +195,20 @@ const choiceVariants: Record<string, any> = {
   })
 };
 
-export const DebtGame: React.FC<DebtGameProps> = ({ fromId, toId, amount }) => {
+export const DebtGame: React.FC<DebtGameProps> = ({ fromId, toId, amount, inPopup = false }) => {
   const [showDuel, setShowDuel] = useState(false);
   const [botChoice, setBotChoice] = useState<keyof typeof choices | null>(null);
-  const [windowSize, setWindowSize] = useState({ width: window.innerWidth, height: window.innerHeight });
-
-  useEffect(() => {
-    const handleResize = () => {
-      setWindowSize({
-        width: window.innerWidth,
-        height: window.innerHeight
-      });
-    };
-
-    handleResize(); // Call it once to initialize
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
   const duelTimeoutRef = useRef<NodeJS.Timeout>();
   const { gameState, challengeToGame, makeGameChoice } = useExpenseStore();
   const [activeDebtId, setActiveDebtId] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [result, setResult] = useState<'win' | 'lose' | 'draw' | null>(null);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [stage, setStage] = useState<'selection' | 'duel' | 'result'>('selection');
 
 
-  const challenge = activeDebtId ? gameState.challenges[activeDebtId] : null;
+  // Get the current challenge if there's an active debt ID
+  const challenge = activeDebtId && gameState && gameState.challenges ? gameState.challenges[activeDebtId] : null;
   const isPlayer1 = fromId === challenge?.fromId;
 
   useEffect(() => {
@@ -223,7 +216,8 @@ export const DebtGame: React.FC<DebtGameProps> = ({ fromId, toId, amount }) => {
       const p1Choice = challenge.player1Choice!;
       const p2Choice = challenge.player2Choice!;
       
-      if (p1Choice === p2Choice) setResult('draw');
+      // Treat ties as losses for the player
+      if (p1Choice === p2Choice) setResult('lose');
       else if (
         (p1Choice === 'rock' && p2Choice === 'scissors') ||
         (p1Choice === 'paper' && p2Choice === 'rock') ||
@@ -232,9 +226,42 @@ export const DebtGame: React.FC<DebtGameProps> = ({ fromId, toId, amount }) => {
       else setResult('lose');
       
       setShowResult(true);
-      setTimeout(() => setShowResult(false), 3000);
+      
+      // Show confetti if the player wins
+      if (result === 'win') {
+        setShowConfetti(true);
+      }
+      
+      // Close the popup or reset the game state after showing the result
+      const resultTimeout = setTimeout(() => {
+        setShowResult(false);
+        
+        // If we're in a popup, close it after showing the result
+        if (inPopup) {
+          // If the game was won (debt cleared), trigger the debtCleared event
+          if (result === 'win') {
+            // We need to wait a bit to make sure the parent component has time to update
+            setTimeout(() => {
+              // This will trigger a re-render in the parent component which should
+              // remove the debt line since the debt has been cleared
+              window.dispatchEvent(new CustomEvent('debtCleared', { 
+                detail: { fromId, toId, amount }
+              }));
+            }, 500);
+          } else {
+            // For draws or losses, just close the popup
+            setTimeout(() => {
+              window.dispatchEvent(new CustomEvent('gameCompleted', { 
+                detail: { fromId, toId, amount, result }
+              }));
+            }, 500);
+          }
+        }
+      }, 3000);
+      
+      return () => clearTimeout(resultTimeout);
     }
-  }, [challenge?.status]);
+  }, [challenge?.status, result, inPopup, fromId, toId, amount]);
 
   const handleChallenge = () => {
     const debtId = challengeToGame(fromId, toId, Math.abs(amount));
@@ -243,9 +270,11 @@ export const DebtGame: React.FC<DebtGameProps> = ({ fromId, toId, amount }) => {
     }
   };
 
-  const [stage, setStage] = useState<'selection' | 'duel' | 'result'>('selection');
+  // Animation state management
   const [animationComplete, setAnimationComplete] = useState(false);
 
+  // Handler for animation completion
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleAnimationComplete = () => {
     setAnimationComplete(true);
   };
@@ -277,7 +306,8 @@ export const DebtGame: React.FC<DebtGameProps> = ({ fromId, toId, amount }) => {
     }
   };
 
-  if (Math.abs(amount) > 5 || amount === 0) {
+  // Only check the amount limit if not in popup mode
+  if (!inPopup && (Math.abs(amount) > 5 || amount === 0)) {
     return null;
   }
 
@@ -285,7 +315,7 @@ export const DebtGame: React.FC<DebtGameProps> = ({ fromId, toId, amount }) => {
     return (
       <motion.button
         onClick={handleChallenge}
-        className="px-6 py-3 text-lg font-medium bg-gradient-to-r from-purple-500 via-indigo-500 to-indigo-600 text-white rounded-xl shadow-lg"
+        className={`px-6 py-3 text-lg font-medium bg-gradient-to-r from-french-blue via-primary-500 to-french-red text-white rounded-xl shadow-lg ${inPopup ? 'w-full' : ''}`}
         whileHover={{ 
           scale: 1.05,
           boxShadow: '0 8px 20px rgba(0,0,0,0.2)',
@@ -305,7 +335,7 @@ export const DebtGame: React.FC<DebtGameProps> = ({ fromId, toId, amount }) => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
       >
-        🎮 Play RPS to Cancel Debt
+        🎮 Play Rock-Paper-Scissors to Cancel Debt
       </motion.button>
     );
   }
@@ -344,7 +374,7 @@ export const DebtGame: React.FC<DebtGameProps> = ({ fromId, toId, amount }) => {
       
       return (
         <motion.div
-          className="p-8 bg-gradient-to-r from-purple-900 to-indigo-900 rounded-2xl shadow-2xl text-center"
+          className={`p-4 bg-gradient-to-r from-french-blue to-french-red rounded-2xl shadow-2xl text-center ${inPopup ? 'w-full' : ''}`}
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.3 }}
@@ -428,7 +458,7 @@ export const DebtGame: React.FC<DebtGameProps> = ({ fromId, toId, amount }) => {
 
     return (
       <motion.div 
-        className="p-8 bg-gradient-to-r from-purple-900 to-indigo-900 rounded-2xl shadow-2xl max-w-2xl mx-auto overflow-hidden"
+        className={`p-4 bg-gradient-to-r from-french-blue to-french-red rounded-2xl shadow-2xl ${inPopup ? 'w-full' : 'max-w-2xl mx-auto'} overflow-hidden`}
         variants={stageVariants}
         initial="initial"
         animate="enter"
@@ -492,23 +522,19 @@ export const DebtGame: React.FC<DebtGameProps> = ({ fromId, toId, amount }) => {
     const isWinOrLose = result === 'win' || result === 'lose';
     return (
       <motion.div 
-        className="relative p-8 bg-gradient-to-r from-purple-900 to-indigo-900 rounded-2xl shadow-2xl text-center overflow-hidden max-w-2xl mx-auto"
+        className={`relative p-4 bg-gradient-to-r from-french-blue to-french-red rounded-2xl shadow-2xl text-center overflow-hidden ${inPopup ? 'w-full' : 'max-w-2xl mx-auto'}`}
         initial={{ opacity: 0, scale: 0.5, y: 20 }}
         variants={resultVariants}
         animate={result}
+        onAnimationComplete={() => {
+          // This helps ensure the animation completes before any potential cleanup
+          if (result === 'win') {
+            setAnimationComplete(true);
+          }
+        }}
       >
-        {result === 'win' && (
-          <div className="absolute inset-0 z-0">
-            <Confetti
-              width={windowSize.width}
-              height={windowSize.height}
-              recycle={false}
-              numberOfPieces={200}
-              gravity={0.3}
-              colors={['#FFD700', '#FFA500', '#FF69B4', '#87CEEB', '#98FB98']}
-            />
-          </div>
-        )}
+        {/* French flag confetti animation when player wins */}
+        <FrenchConfetti active={result === 'win'} onComplete={() => setShowConfetti(false)} />
         <motion.div 
           className="relative z-10 text-6xl mb-4"
           animate={{ 

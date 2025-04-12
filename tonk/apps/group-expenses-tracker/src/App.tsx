@@ -28,8 +28,8 @@ export const App: React.FC = () => {
           <div className="flex justify-between h-16">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <h1 className="text-2xl font-display font-bold bg-gradient-to-r from-primary-500 to-accent-500 bg-clip-text text-transparent">
-                  💰 Splitwise Fun
+                <h1 className="text-2xl font-display font-bold bg-gradient-to-r from-french-blue via-french-white to-french-red bg-clip-text text-transparent">
+                  💰 The Frenchies Money
                 </h1>
               </div>
               <div className="hidden md:flex ml-10 space-x-4">

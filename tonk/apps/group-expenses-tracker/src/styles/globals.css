@@ -10,7 +10,7 @@
   }
   
   body {
-    @apply font-body bg-gray-50;
+    @apply font-body bg-french-white;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -26,7 +26,7 @@
   }
 
   .btn-primary {
-    @apply btn bg-gradient-to-br from-primary-500 to-primary-600 text-white
+    @apply btn bg-gradient-to-br from-french-blue to-primary-600 text-white
            hover:from-primary-600 hover:to-primary-700
            shadow-soft hover:shadow-soft-lg;
   }
@@ -37,7 +37,7 @@
   }
 
   .btn-accent {
-    @apply btn bg-gradient-to-br from-accent-500 to-accent-600 text-white
+    @apply btn bg-gradient-to-br from-french-red to-accent-600 text-white
            hover:from-accent-600 hover:to-accent-700
            shadow-soft hover:shadow-soft-lg;
   }
@@ -74,7 +74,7 @@
     @apply w-10 h-10 rounded-full
            flex items-center justify-center
            text-white font-medium text-lg
-           bg-gradient-to-br from-primary-400 to-accent-400;
+           bg-gradient-to-br from-french-blue to-french-red;
   }
 
   .badge {
@@ -82,11 +82,11 @@
   }
 
   .badge-primary {
-    @apply badge bg-primary-100 text-primary-800;
+    @apply badge bg-primary-100 text-french-blue;
   }
 
   .badge-accent {
-    @apply badge bg-accent-100 text-accent-800;
+    @apply badge bg-accent-100 text-french-red;
   }
 
   .badge-success {
@@ -104,5 +104,18 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-gray-300 rounded-full hover:bg-gray-400 transition-colors;
+  @apply bg-primary-300 rounded-full hover:bg-primary-400 transition-colors;
+}
+
+/* French flag inspired elements */
+.french-flag-border {
+  @apply border-l-8 border-french-blue border-r-8 border-french-red;
+}
+
+.french-card {
+  @apply card border-t-4 border-french-blue border-b-4 border-french-red;
+}
+
+.french-gradient {
+  @apply bg-gradient-to-r from-french-blue via-french-white to-french-red;
 }

@@ -1,11 +1,56 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useExpenseStore } from '../stores/expenseStore';
 import { DebtGame } from './DebtGame';
+import SmallDebtPopup from './SmallDebtPopup';
 
 const BalanceSummary: React.FC = () => {
   const navigate = useNavigate();
-  const { users, balances, addSettlement } = useExpenseStore();
+  const { users, balances, addSettlement, calculateBalances } = useExpenseStore();
+  const [smallDebtPopup, setSmallDebtPopup] = useState<{
+    fromId: string;
+    toId: string;
+    amount: number;
+  } | null>(null);
+  
+  // Force UI refresh when debts are cleared
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  
+  // Listen for debt cleared and game completed events
+  useEffect(() => {
+    const handleDebtCleared = () => {
+      // Recalculate balances
+      calculateBalances();
+      // Force a UI refresh
+      setRefreshTrigger(prev => prev + 1);
+      // Close popup if open
+      setSmallDebtPopup(null);
+    };
+    
+    const handleGameCompleted = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const { result } = customEvent.detail;
+      
+      // For losses and draws, double the debt amount
+      if (result === 'lose' || result === 'draw') {
+        // The debt amount is doubled automatically in the store
+        calculateBalances();
+        // Force a UI refresh
+        setRefreshTrigger(prev => prev + 1);
+      }
+      
+      // Close popup regardless of outcome
+      setSmallDebtPopup(null);
+    };
+    
+    window.addEventListener('debtCleared', handleDebtCleared);
+    window.addEventListener('gameCompleted', handleGameCompleted);
+    
+    return () => {
+      window.removeEventListener('debtCleared', handleDebtCleared);
+      window.removeEventListener('gameCompleted', handleGameCompleted);
+    };
+  }, [calculateBalances]);
 
   const getUserName = (userId: string) => {
     return users[userId]?.name || 'Unknown';
@@ -33,6 +78,15 @@ const BalanceSummary: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-8">
+      {/* Small Debt Popup */}
+      {smallDebtPopup && (
+        <SmallDebtPopup
+          fromId={smallDebtPopup.fromId}
+          toId={smallDebtPopup.toId}
+          amount={smallDebtPopup.amount}
+          onClose={() => setSmallDebtPopup(null)}
+        />
+      )}
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-display font-bold text-gray-800">💳 Balance Summary</h2>
         <button
@@ -99,11 +153,20 @@ const BalanceSummary: React.FC = () => {
                                   >
                                     ✔️ Settle
                                   </button>
-                                  <DebtGame
-                                    fromId={user.id}
-                                    toId={userId}
-                                    amount={amount}
-                                  />
+                                  {amount >= 5 ? (
+                                    <DebtGame
+                                      fromId={user.id}
+                                      toId={userId}
+                                      amount={amount}
+                                    />
+                                  ) : (
+                                    <button
+                                      onClick={() => setSmallDebtPopup({ fromId: user.id, toId: userId, amount })}
+                                      className="btn-primary text-sm"
+                                    >
+                                      🎮 Play Game
+                                    </button>
+                                  )}
                                 </div>
                               </div>
                             </li>

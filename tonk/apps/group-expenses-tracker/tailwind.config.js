@@ -25,29 +25,35 @@ module.exports = {
         },
       },
       colors: {
+        // French flag colors
+        french: {
+          blue: '#0055A4',  // French flag blue
+          white: '#FFFFFF', // White
+          red: '#EF4135',   // French flag red
+        },
         primary: {
-          50: '#f5f3ff',
-          100: '#ede9fe',
-          200: '#ddd6fe',
-          300: '#c4b5fd',
-          400: '#a78bfa',
-          500: '#8b5cf6',
-          600: '#7c3aed',
-          700: '#6d28d9',
-          800: '#5b21b6',
-          900: '#4c1d95',
+          50: '#E6EEFF',
+          100: '#CCE0FF',
+          200: '#99C0FF',
+          300: '#66A0FF',
+          400: '#3380FF',
+          500: '#0055A4', // French blue as primary-500
+          600: '#004483',
+          700: '#003362',
+          800: '#002241',
+          900: '#001121',
         },
         accent: {
-          50: '#fff7ed',
-          100: '#ffedd5',
-          200: '#fed7aa',
-          300: '#fdba74',
-          400: '#fb923c',
-          500: '#f97316',
-          600: '#ea580c',
-          700: '#c2410c',
-          800: '#9a3412',
-          900: '#7c2d12',
+          50: '#FEEEEE',
+          100: '#FCDCDC',
+          200: '#F9B9B9',
+          300: '#F69797',
+          400: '#F37474',
+          500: '#EF4135', // French red as accent-500
+          600: '#BF342A',
+          700: '#8F2720',
+          800: '#601A15',
+          900: '#300D0B',
         },
         gray: {
           50: '#f9fafb',

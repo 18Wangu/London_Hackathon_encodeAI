@@ -2,6 +2,19 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useExpenseStore } from '../stores/expenseStore';
 
+// Define expense categories with emojis
+const expenseCategories = [
+  { id: 'food', name: 'Food & Drinks', emoji: '🍽️' },
+  { id: 'transport', name: 'Transportation', emoji: '🚗' },
+  { id: 'entertainment', name: 'Entertainment', emoji: '🎬' },
+  { id: 'home', name: 'Home & Utilities', emoji: '🏠' },
+  { id: 'shopping', name: 'Shopping', emoji: '🛍️' },
+  { id: 'health', name: 'Health', emoji: '💊' },
+  { id: 'travel', name: 'Travel', emoji: '✈️' },
+  { id: 'education', name: 'Education', emoji: '📚' },
+  { id: 'other', name: 'Other', emoji: '💰' },
+];
+
 const AddExpense: React.FC = () => {
   const navigate = useNavigate();
   const { users, addExpense } = useExpenseStore();
@@ -9,6 +22,7 @@ const AddExpense: React.FC = () => {
   const [amount, setAmount] = useState('');
   const [paidBy, setPaidBy] = useState('');
   const [participants, setParticipants] = useState<string[]>([]);
+  const [category, setCategory] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,12 +33,13 @@ const AddExpense: React.FC = () => {
     }
 
     addExpense({
-      id: Date.now().toString(),
       description,
       amount: parseFloat(amount),
       paidBy,
       participants,
-      date: new Date().toISOString()
+      date: new Date().toISOString(),
+      category,
+      groupId: '1' // Default group ID
     });
 
     navigate('/');
@@ -95,6 +110,28 @@ const AddExpense: React.FC = () => {
                   ))}
                 </select>
               </label>
+            </div>
+
+            <div>
+              <label className="block text-lg font-medium text-gray-800 mb-4">
+                🏷️ Category
+              </label>
+              <div className="grid grid-cols-3 gap-3">
+                {expenseCategories.map((cat) => (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => setCategory(cat.id)}
+                    className={`flex flex-col items-center p-3 rounded-xl border-2 transition-all
+                      ${category === cat.id
+                        ? 'border-french-blue bg-primary-50 text-french-blue scale-105'
+                        : 'border-gray-200 hover:border-gray-300'}`}
+                  >
+                    <span className="text-2xl mb-1">{cat.emoji}</span>
+                    <span className="text-sm font-medium">{cat.name}</span>
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div>

@@ -45,6 +45,7 @@
     "@automerge/automerge": "^2.2.8",
     "@tonk/keepsync": "^0.3.0",
     "@tsparticles/react": "^3.0.0",
+    "canvas-confetti": "^1.9.3",
     "framer-motion": "^12.6.5",
     "lucide-react": "^0.475.0",
     "react": "^19.0.0",
